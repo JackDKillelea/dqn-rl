@@ -1,0 +1,13 @@
+{
+  "version": "0.1.0",
+  "configuration": [
+    {
+      "type": "debugpy",
+      "name": "cartpole1",
+      "request": "launch",
+      "program": "agent.py",
+      "console": "integratedTerminal",
+      "args": ["cartpole1", "--train"]
+    }
+  ]
+}
