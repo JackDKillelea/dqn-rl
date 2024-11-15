@@ -44,6 +44,7 @@ class Agent:
         self.learning_rate_actor = hyperparameters["learning_rate_actor"]   # Learning rate for actor network
         self.stop_on_reward = hyperparameters["stop_on_reward"]             # Break point if AI gets a reward above the stop_on_reward threshold
         self.fc1_nodes = hyperparameters["fc1_nodes"]                       # Number of nodes to pass for the DQN
+        self.enable_dueling_dqn = hyperparameters["enable_dueling_dqn"]     # Enable dueling DQN
 
         self.loss_function = nn.MSELoss()                                   #  MSE = Mean Squared Error
         self.optimiser = None
@@ -66,14 +67,14 @@ class Agent:
         last_graph_update_time = datetime.now()
 
         # Set up DQN model
-        policy_dqn = DQN(number_states, number_actions, self.fc1_nodes)
+        policy_dqn = DQN(number_states, number_actions, self.fc1_nodes, self.enable_dueling_dqn)
 
         if is_training:
             # If training, train the target DQN
             replay_memory = ReplayMemory(self.replay_memory_size)
             epsilon = self.epsilon_init
 
-            target_dqn = DQN(number_states, number_actions, self.fc1_nodes)
+            target_dqn = DQN(number_states, number_actions, self.fc1_nodes, self.enable_dueling_dqn)
             target_dqn.load_state_dict(policy_dqn.state_dict())
 
             step_counter = 0
@@ -120,7 +121,7 @@ class Agent:
             if is_training:
                 current_time = datetime.now()
                 if episode_reward > best_reward:
-                    log_message = f"New best reward: Current date: {current_time.strftime(DATE_FORMAT)} Episode: {episode}, Reward: {episode_reward:.2f}, Epsilon: {epsilon:.2f}"
+                    log_message = f"New best reward: Current date: {current_time.strftime(DATE_FORMAT)} Episode: {episode}, Reward: {episode_reward:.2f} , Epsilon: {epsilon:.2f}"
                     print(log_message)
                     with open(self.LOG_FILE, "a") as file:
                         file.write(log_message + "\n")
@@ -128,7 +129,7 @@ class Agent:
                     torch.save(policy_dqn.state_dict(), self.MODEL_FILE)
                     best_reward = episode_reward
 
-                if current_time - last_graph_update_time > timedelta(seconds=10):
+                if current_time - last_graph_update_time > timedelta(seconds=60):
                     self.save_graph(reward_per_episode, epsilon_history)
                     last_graph_update_time = current_time
 

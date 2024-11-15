@@ -11,6 +11,7 @@ cartpole1:
   discount_factor_q: 0.99
   stop_on_reward: 100000
   fc1_nodes: 10
+  enable_dueling_dqn: True
 
 flappybird1:
   name: "Flappy_Bird1"
@@ -25,6 +26,7 @@ flappybird1:
   discount_factor_q: 0.99
   stop_on_reward: 100000
   fc1_nodes: 512
+  enable_dueling_dqn: True
   env_make_params:
     use_lidar: False
 
@@ -41,3 +43,4 @@ mc1:
   discount_factor_q: 0.99
   stop_on_reward: 100000
   fc1_nodes: 10
+  enable_dueling_dqn: True
