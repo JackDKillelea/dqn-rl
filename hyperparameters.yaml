@@ -1,5 +1,5 @@
 cartpole1:
-  name: "cartpole1"
+  name: "Cart_Pole1"
   env_id: CartPole-v1
   replay_memory_size: 100000
   batch_size: 64
@@ -13,17 +13,31 @@ cartpole1:
   fc1_nodes: 10
 
 flappybird1:
-  name: "flappybird1"
+  name: "Flappy_Bird1"
   env_id: FlappyBird-v0
   replay_memory_size: 100000
-  batch_size: 64
+  batch_size: 32
   epsilon_init: 1
-  epsilon_decay: 0.90_99_5
-  epsilon_min: 0.05
+  epsilon_decay: 0.99995
+  epsilon_min: 0.15
   network_sync_rate: 10
-  learning_rate_actor: 0.0001
+  learning_rate_actor: 0.001
   discount_factor_q: 0.99
   stop_on_reward: 100000
   fc1_nodes: 512
   env_make_params:
     use_lidar: False
+
+mc1:
+  name: "Mountain_Car1"
+  env_id: MountainCar-v0
+  replay_memory_size: 100000
+  batch_size: 64
+  epsilon_init: 1
+  epsilon_decay: 0.9995
+  epsilon_min: 0.05
+  network_sync_rate: 10
+  learning_rate_actor: 0.001
+  discount_factor_q: 0.99
+  stop_on_reward: 100000
+  fc1_nodes: 10

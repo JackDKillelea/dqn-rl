@@ -1,20 +1,20 @@
-import argparse
 from random import random
-import flappy_bird_gymnasium
-import gymnasium
-import matplotlib.pyplot as plt
-import numpy as np
-
 from dqn import DQN
 from experience_replay import ReplayMemory
+from datetime import datetime, timedelta
+from torch import nn
+import argparse
+import gymnasium
 import itertools
 import yaml
 import torch
-from torch import nn
 import os
 import matplotlib as mp
-from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+import numpy as np
+import flappy_bird_gymnasium
 
+# Date and time format for logging
 DATE_FORMAT = "%m-%d %H:%M:%S"
 
 # Directory for saving run statistics
@@ -34,7 +34,7 @@ class Agent:
         # Hyperparameters
         self.name = hyperparameters["name"]
         self.env_id = hyperparameters["env_id"]                             # Environment ID
-        self.replay_memory_size = hyperparameters["replay_memory_size"]     # Size of the replay memory
+        self.replay_memory_size = hyperparameters["replay_memory_size"]     # Size of the replay memory - around 100,000 for smaller games such as Cart Pole
         self.batch_size = hyperparameters["batch_size"]                     # Size of the training data set from the replay memory
         self.epsilon_init = hyperparameters["epsilon_init"]                 # 1 = 100% random action, 0 = 0% random action
         self.epsilon_decay = hyperparameters["epsilon_decay"]               # Epsilon decay rate
@@ -53,7 +53,6 @@ class Agent:
         self.GRAPH_FILE = os.path.join(RUNS_DIR, f"{self.name}.png")
 
     def run(self, is_training=False, render=False):
-        # env = gymnasium.make("FlappyBird-v0", render_mode="human" if render else None, use_lidar=True)
         env = gymnasium.make(self.env_id, render_mode="human" if render else None)
 
         # Get observation space size
@@ -61,13 +60,16 @@ class Agent:
         # Get number of possible actions
         number_actions = env.action_space.n
 
+        # Initialize tracking variables
         reward_per_episode = []
         epsilon_history = []
         last_graph_update_time = datetime.now()
 
+        # Set up DQN model
         policy_dqn = DQN(number_states, number_actions, self.fc1_nodes)
 
         if is_training:
+            # If training, train the target DQN
             replay_memory = ReplayMemory(self.replay_memory_size)
             epsilon = self.epsilon_init
 
@@ -79,6 +81,7 @@ class Agent:
 
             self.optimiser = torch.optim.Adam(policy_dqn.parameters(), lr=self.learning_rate_actor)
         else:
+            # If not training, load the model from file location
             policy_dqn.load_state_dict(torch.load(self.MODEL_FILE))
             policy_dqn.eval()
 
@@ -142,13 +145,6 @@ class Agent:
                     step_counter = 0
 
     def optimise(self, batch, policy_dqn, target_dqn):
-        # for state, action, new_state, reward, terminated in batch:
-        #     if terminated:
-        #         target_value = reward
-        #     else:
-        #         with torch.no_grad():
-        #             target_q = reward + self.discount_factor_q * target_dqn(new_state).max()
-
         states, actions, new_states, rewards, terminated = zip(*batch)
         states = torch.stack(states)
         actions = torch.stack(actions)
@@ -174,24 +170,25 @@ class Agent:
         self.optimiser.step()
 
     def save_graph(self, reward_per_episode, epsilon_history):
-        fig = plt.figure(1)
+        fig = plt.figure(figsize=(16, 6))
 
         mean_reward = np.zeros(len(reward_per_episode))
         for x in range(len(reward_per_episode)):
             mean_reward[x] = np.mean(reward_per_episode[max(0, x-99):x+1])
         plt.subplot(121)
         plt.ylabel("Mean Reward")
+        plt.xlabel("Episode")
         plt.plot(mean_reward)
 
         plt.subplot(122)
         plt.ylabel("Epsilon Decay")
+        plt.xlabel("Episode")
         plt.plot(epsilon_history)
 
-        plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.2, right=0.9, bottom=0.2, top=0.9, wspace=0.3, hspace=0.2)
 
         fig.savefig(self.GRAPH_FILE)
         plt.close()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train or test the DQN agent")
@@ -202,9 +199,10 @@ if __name__ == "__main__":
     dlq = Agent(hyperparameter_set=args.hyperparameter)
 
     if args.train:
-        dlq.run(is_training=True)
+        dlq.run(is_training=True, render=True)
     else:
         dlq.run(is_training=False, render=True)
 
-    # agent = Agent("cartpole1")
+    # Uncomment the following lines to test specific game
+    # agent = Agent("ALE/Breakout-v5")
     # agent.run(is_training=True, render=True)
